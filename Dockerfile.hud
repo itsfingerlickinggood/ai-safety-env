@@ -1,0 +1,41 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HUD_AGENT_UID=65532 \
+    HUD_AGENT_GID=65532 \
+    HUD_SANDBOX_EXEC=/usr/local/bin/hud-sandbox-exec
+
+# HUD's build runtime blocks user namespaces, so use a privilege wall plus a
+# seccomp launcher rather than bubblewrap. util-linux supplies setpriv, which
+# HUD uses to drop every agent shell to HUD_AGENT_UID.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       bash ca-certificates gcc libc6-dev libseccomp-dev libseccomp2 util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY sandbox/hud_sandbox.c /tmp/hud_sandbox.c
+RUN gcc -O2 -Wall -Wextra -Werror /tmp/hud_sandbox.c -lseccomp -o /usr/local/bin/hud-sandbox-exec \
+    && mkdir -p /opt/hud-sandbox/bin \
+    && ln -s /usr/local/bin/hud-sandbox-exec /opt/hud-sandbox/bin/bash \
+    && rm /tmp/hud_sandbox.c \
+    && apt-get purge -y gcc libc6-dev libseccomp-dev \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY pyproject.toml /app/pyproject.toml
+RUN pip install --no-cache-dir "hud==0.6.15" "numpy>=2.0,<3" "pandas>=2.2,<3"
+
+COPY env.py tasks.py /app/
+COPY workspace_seed /app/workspace_seed
+COPY verifier /app/verifier
+COPY sandbox/test_production_sandbox.py /app/sandbox/test_production_sandbox.py
+RUN chmod -R go-rwx /app/verifier \
+    && chmod 0755 /usr/local/bin/hud-sandbox-exec /opt/hud-sandbox/bin
+
+# Fail the image build if the namespace-free production boundary is broken.
+RUN python /app/sandbox/test_production_sandbox.py
+
+EXPOSE 8765
+CMD ["hud", "serve", "env.py", "--host", "0.0.0.0", "-p", "8765"]

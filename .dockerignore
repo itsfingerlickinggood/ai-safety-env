@@ -1,0 +1,15 @@
+.git
+.hud
+.venv
+.venv_hud_only
+.hud_test_bin
+__pycache__
+*.pyc
+.reference_workspace
+.grader_probe
+workspace
+analysis
+reference
+scripts
+tasks_probe.py
+*.zip

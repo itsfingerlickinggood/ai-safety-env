@@ -1,0 +1,10 @@
+.env
+.hud/
+.venv/
+.venv_hud_only/
+__pycache__/
+*.py[cod]
+.reference_workspace/
+.grader_probe/
+workspace/
+*.zip
