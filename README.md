@@ -1,57 +1,344 @@
 # HUD AI-Safety Paper Reproduction
 
-This repository contains two deliberately separate HUD tasksets:
+<p align="center">
+  <strong>A tamper-resistant RL environment for testing whether an AI agent can forecast, reproduce, ablate, and critique AI-safety research.</strong>
+</p>
 
-- **AI Safety Paper Reproduction - Core v1** is the official target. It asks an
-  agent to forecast, reproduce, ablate, and interpret the central 3x3 study
-  from *Knowing When to Stop: Bayesian Optimal Stopping for LLM Evaluations*.
-- **AI Safety Monitoring Regression** is the existing synthetic
-  sabotage-monitoring task. It remains a deterministic regression check and
-  is not part of the paper-reproduction score.
+<p align="center">
+  <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white">
+  <img alt="HUD 0.6.15" src="https://img.shields.io/badge/HUD-0.6.15-111827">
+  <img alt="Status: package incomplete" src="https://img.shields.io/badge/status-package%20incomplete-F59E0B">
+  <img alt="Network disabled" src="https://img.shields.io/badge/agent%20network-disabled-DC2626">
+</p>
 
-## Claim boundary
+> [!IMPORTANT]
+> **Core v1 is a bounded independent reproduction, not a replay of the paper's original model calls.** The public repository intentionally excludes real score traces, answer keys, frozen references, hidden variants, provider responses, and credentials. Do not deploy until the private study package passes strict preflight.
 
-Core v1 is a **bounded independent reproduction**. The agent receives a
-source-derived redacted paper package: the main methods and formal Appendix A
-are retained, while answer-bearing results and empirical Appendix B are
-withheld. It also receives clean offline score traces from a newly collected
-current-model study, pinned analysis code, and a manifest of the nine core
-analyses plus three ablations. It does not claim to replay the authors' original
-model calls or every analysis in the original paper.
+---
 
-The public repository intentionally contains no real score traces, frozen
-references, provider credentials, result figures, or hidden test cases. Until
-the trace collection and reference-freezing steps below are complete, the
-paper task fails closed and must not be deployed.
+## The idea in one picture
 
-## Build the paper package
+```mermaid
+flowchart LR
+    P["Results-redacted<br/>AI-safety paper"] --> R["Research agent"]
+    R --> F["Forecast"]
+    R --> E["Experiment plan"]
+    F --> L{"Valid and<br/>hash-locked?"}
+    E --> L
+    L -- No --> W["No study data<br/>No reward"]
+    L -- Yes --> D["Release offline<br/>study package"]
+    D --> A["Run 9 analyses<br/>+ 3 ablations"]
+    A --> S["Executable submission<br/>+ scientific report"]
+    S --> G["Private grader"]
+    G --> N["Numerical fidelity"]
+    G --> H["Hidden robustness"]
+    G --> I["Scientific interpretation"]
+```
 
-The pinned upstream paper PDF is an external source artifact. Build the
-agent-facing extraction locally:
+The benchmark asks a stricter question than “can the model summarize a paper?”
+
+> **Can an autonomous research agent commit to predictions, execute a real analysis, survive hidden variations, and report non-replication honestly?**
+
+---
+
+## What is evaluated?
+
+| Capability | Observable behavior | Why it matters |
+|---|---|---|
+| 🔮 **Forecasting** | Predicts registered outcomes with uncertainty before seeing data | Measures research intuition without hindsight |
+| 🧭 **Experimental design** | Maps every analysis to data, parameters, controls, and falsification criteria | Distinguishes executable plans from plausible prose |
+| 🧮 **Reproduction** | Produces schema-valid numerical results for every cell | Tests end-to-end scientific execution |
+| 🧪 **Ablation** | Runs fixed-budget, ordering, and conservatism checks | Tests methodological sensitivity |
+| 🕵️ **Robustness** | Re-runs its code on a deterministic private variant | Penalizes hardcoding and answer reconstruction |
+| 📝 **Interpretation** | Separates supported, insufficient, and unsupported claims | Rewards scientific honesty instead of forced success |
+
+| ✅ This repository is | ❌ This repository is not |
+|---|---|
+| A long-horizon research-agent environment | A paper-summary benchmark |
+| A bounded reproduction on newly collected traces | An exact historical replay |
+| A forecast-then-experiment protocol | A task where the answer is visible in context |
+| A mixed deterministic + report-judge evaluation | A purely subjective LLM-as-judge task |
+| A framework for measuring research integrity | Proof that agents can already do trustworthy science |
+
+---
+
+## Two deliberately separate tasksets
+
+```mermaid
+flowchart TB
+    REPO["This repository"]
+    REPO --> CORE["Core v1<br/>official research target"]
+    REPO --> REG["Monitoring regression<br/>synthetic engineering check"]
+    CORE --> C1["Forecast"]
+    CORE --> C2["Reproduce"]
+    CORE --> C3["Ablate"]
+    CORE --> C4["Interpret"]
+    REG --> R1["Deterministic fixture"]
+    REG --> R2["Fast lifecycle regression"]
+```
+
+| Taskset | Entrypoints | Purpose | Core v1 score? |
+|---|---|---|:---:|
+| **AI Safety Paper Reproduction – Core v1** | `env.py`, `tasks_paper.py` | Official forecast → reproduce → critique task | **Yes** |
+| **AI Safety Monitoring Regression** | `env_monitoring.py`, `tasks_monitoring.py` | Retained deterministic regression test | No |
+
+The regression task can detect broken environment plumbing. It cannot establish that Core v1 is scientifically valid or deployment-ready.
+
+---
+
+## The Core v1 study
+
+Core v1 reproduces the central 3×3 study from *Knowing When to Stop: Bayesian Optimal Stopping for LLM Evaluations* using a newly collected, provenance-bound current-model dataset.
+
+### Registered study matrix
+
+| Score type ↓ / challenge stratum → | Low | Mid | High |
+|---|:---:|:---:|:---:|
+| **Binary** | `low_binary` | `mid_binary` | `high_binary` |
+| **Ordinal** | `low_ordinal` | `mid_ordinal` | `high_ordinal` |
+| **Continuous** | `low_continuous` | `mid_continuous` | `high_continuous` |
+
+```text
+20 fixed items × 4 epochs = 80 scored observations per cell
+9 cells × 80 observations = 720 model calls in the complete study
+```
+
+| Required ablation | Question |
+|---|---|
+| `fixed_budget_baseline` | Does adaptive stopping improve on a fixed evaluation budget? |
+| `item_order_sensitivity` | Is the result stable when item order changes? |
+| `stopping_conservatism_sensitivity` | How sensitive is the result to stopping-rule conservatism? |
+
+> [!NOTE]
+> `low`, `mid`, and `high` are preregistered challenge strata, not claims about observed performance. The final report must test whether the collected data support that ordering.
+
+---
+
+## The agent's journey
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as HUD
+    participant W as Trusted watcher
+    participant A as Research agent
+    participant P as Private grader
+    H->>A: Seed redacted paper, schemas, and protocol
+    A->>A: Read methods and formulate hypotheses
+    A->>W: Write forecast.json
+    A->>W: Write experiment_plan.json
+    W->>W: Validate, hash, and lock both artifacts
+    alt Invalid or incomplete
+        W-->>A: Keep phase two hidden
+    else Valid and locked
+        W->>A: Atomically release phase_two/
+        W->>A: Write PHASE_TWO_READY
+    end
+    A->>A: Run 9 analyses and 3 ablations
+    A->>A: Build reusable submission.py
+    A->>H: Submit results, code, and report
+    H->>P: Copy regular files into isolated grading tree
+    P->>P: Compare against frozen reference
+    P->>P: Run submission.py on one hidden variant
+    P-->>H: Component scores + report evidence
+```
+
+### Phase 1 — preregister before outcomes
+
+The agent sees the results-redacted paper, provenance record, protocol, and forecast/plan schemas. It must write:
+
+```text
+forecast.json
+experiment_plan.json
+```
+
+The trusted watcher validates and hashes both files. Experimental traces stay hidden until both artifacts are structurally valid.
+
+### Phase 2 — reproduce, stress-test, and report
+
+After `PHASE_TWO_READY`, the agent receives validated offline score traces, pinned analysis code, a complete analysis manifest, and strict result schemas. It must produce:
+
+```text
+reproduction_results.json
+ablations.json
+final_report.md
+submission.py
+```
+
+The grader runs `submission.py` again on an unseen score matrix. Memorized public values cannot pass that check.
+
+---
+
+## Information boundaries
+
+```mermaid
+flowchart LR
+    subgraph PUBLIC["Public repository"]
+        PR["Redacted paper"]
+        SC["Schemas"]
+        PC["Pinned analysis code"]
+        CP["Collection protocol"]
+    end
+    subgraph OUTSIDE["Secure collection machine"]
+        KEY["HUD_API_KEY"]
+        RAW["Raw responses"]
+        AK["Answer keys"]
+        SCORE["Normalized traces"]
+    end
+    subgraph IMAGE["Evaluator image"]
+        AGENT["Unprivileged offline<br/>agent workspace"]
+        PRIVATE["Root-only verifier<br/>and references"]
+    end
+    CP --> OUTSIDE
+    SCORE -->|validated package| AGENT
+    SCORE -->|reference freeze| PRIVATE
+    PR --> AGENT
+    SC --> AGENT
+    PC --> AGENT
+    KEY -. never copied .-> AGENT
+    RAW -. never copied .-> AGENT
+    AK -. never copied .-> AGENT
+    PRIVATE -. unreadable .-> AGENT
+```
+
+| Artifact | GitHub | Agent | Private grader | Collection machine |
+|---|:---:|:---:|:---:|:---:|
+| Redacted paper and methods | ✅ | ✅ | ✅ | Optional |
+| Output schemas | ✅ | ✅ | ✅ | ✅ |
+| Packaged score traces | ❌ | Phase 2 | ✅ | ✅ |
+| Answers and raw responses | ❌ | ❌ | ❌ | ✅ |
+| Frozen numerical references | ❌ | ❌ | ✅ | ✅ |
+| Hidden variants and tolerances | ❌ | ❌ | ✅ | ✅ |
+| Provider credentials | ❌ | ❌ | ❌ | Session only |
+
+---
+
+## Reward architecture
+
+```mermaid
+pie showData
+    title Core v1 reward weights
+    "Numerical reproduction" : 35
+    "Plan + manifest" : 15
+    "Ablations" : 15
+    "Hidden robustness" : 15
+    "Forecast calibration" : 10
+    "Report interpretation" : 10
+```
+
+| Component | Weight | Evaluation |
+|---|---:|---|
+| Forecast calibration | 10% | Brier score for binary outcomes; CRPS for continuous predictions |
+| Plan + manifest | 15% | Schema, hypotheses, controls, falsification, leakage controls, complete registration |
+| Numerical reproduction | 35% | Cell and aggregate values compared with private tolerances |
+| Ablations | 15% | Intervention, effect, uncertainty, outcome, and interpretation |
+| Hidden robustness | 15% | Deterministic hidden variant selected from the task-instance seed |
+| Report interpretation | 10% | Scientific report judged against private result-grounded evidence |
+
+```mermaid
+flowchart TD
+    X["Agent submission"] --> V{"All required files<br/>valid and regular?"}
+    V -- No --> Z["Affected components = 0"]
+    V -- Yes --> M["Score public matrix"]
+    M --> A{"Numerics and ablations<br/>at least 50%?"}
+    A -- No --> CAP["Deterministic reward capped at 0.50"]
+    A -- Yes --> H["Copy into read-only<br/>grading tree"]
+    H --> U["Run on hidden inputs<br/>with timeout"]
+    U --> R["Validate hidden result"]
+    R --> J["Judge interpretation"]
+```
+
+Controls also include in-memory preregistration hashes, tamper caps, stable hidden selection, rejection of links and oversized files, strict schemas, and process-group termination after a 900-second timeout.
+
+---
+
+## Repository map
+
+```text
+.
+├── env.py                           # Core lifecycle and phase watcher
+├── env_monitoring.py                # Separate regression environment
+├── tasks_paper.py                   # Official Core v1 taskset
+├── tasks_monitoring.py              # Regression-only taskset
+├── Dockerfile.hud                   # Production evaluator image
+├── paper_reproduction/
+│   ├── MMLU_CORE_V1_PROTOCOL.md     # Pinned external study
+│   ├── EXTERNAL_COLLECTION.md       # Collection workflow
+│   ├── phase1/                      # Redacted paper + preregistration
+│   ├── release/                     # Released only after lock
+│   └── vendor/optstop/              # Pinned analysis implementation
+├── verifier/
+│   ├── optstop_score.py             # Deterministic grader
+│   ├── output_validation.py         # Strict schemas
+│   ├── preflight_core_package.py    # Deployment gate
+│   └── private_optstop/             # Gitignored private bundle
+├── scripts/
+│   ├── collect_current_model_study.py
+│   ├── finalize_core_v1_package.py
+│   ├── freeze_optstop_reference.py
+│   └── probe_*.py                   # No-cost contract tests
+└── sandbox/                         # Restricted submission launcher
+```
+
+---
+
+## Source paper → deployable environment
+
+```mermaid
+flowchart TD
+    PDF["Pinned source PDF"] --> REDACT["Build + validate<br/>redacted paper"]
+    DATA["Pinned MMLU snapshot"] --> DEF["Build study definition<br/>and scorer"]
+    DEF --> EST["Estimate calls and cost"]
+    EST -->|approved| COLLECT["Collect outside HUD"]
+    COLLECT --> NORMALIZE["Score + normalize<br/>720 records"]
+    NORMALIZE --> FINALIZE["Finalize package"]
+    FINALIZE --> PUBLIC["Agent-facing traces"]
+    FINALIZE --> FREEZE["20-seed reference freeze"]
+    FREEZE --> HIDDEN["7 hidden variants<br/>+ tolerances"]
+    REDACT --> STRICT["Strict preflight"]
+    PUBLIC --> STRICT
+    HIDDEN --> STRICT
+    STRICT -->|pass| BUILD["Build HUD image"]
+    BUILD --> PILOT["One-model pilot"]
+    PILOT --> REVIEW["Inspect transcript,<br/>reward, runtime, failure"]
+```
+
+### 1 · Build the redacted paper
 
 ```bash
 uv run python scripts/build_redacted_optstop_paper.py \
-  --source "/path/to/Knowing When to Stop - Pilditch (2026 arXiv).pdf" \
+  --source "/secure/source/Knowing When to Stop - Pilditch (2026 arXiv).pdf" \
   --output paper_reproduction/phase1/paper_redacted.md \
   --provenance paper_reproduction/phase1/paper_provenance.json
+
 uv run python scripts/check_optstop_reference.py --phase-one-only
 ```
 
-The extraction preserves the main methods, setup, formal Appendix A material,
-limitations, and references. It redacts the abstract outcome claim, main
-empirical results, result figures, conclusions, and the whole empirical
-Appendix B because it interleaves methods with answer-bearing validation.
+The extraction keeps methods, setup, formal Appendix A, limitations, and references while removing answer-bearing claims, results, figures, captions, conclusions, and empirical Appendix B.
 
-## Create the private study package
+### 2 · Build the external study
 
-Generate the current-model traces outside HUD with `claude-sonnet-4-6` using
-the pinned MMLU study defined in `paper_reproduction/MMLU_CORE_V1_PROTOCOL.md`.
-Keep API keys, answer keys, and raw response text outside this repository.
-The collection process computes a conservative cost estimate before making
-calls and emits normalized JSONL. By default it uses HUD's
-Anthropic-compatible inference gateway with `HUD_API_KEY`, only in the
-external collection shell; that credential is never copied into the image.
-Then run the single no-secret finalization command:
+```bash
+hf download cais/mmlu all/test-00000-of-00001.parquet \
+  --revision c30699e8356da336a370243923dbaf21066bb9fe \
+  --local-dir /secure/mmlu-snapshot
+
+uv run --with pyarrow==17.0.0 python scripts/build_mmlu_core_v1_study.py \
+  --mmlu-test-parquet /secure/mmlu-snapshot/all/test-00000-of-00001.parquet \
+  --output-definition /secure/external_study/study_definition.json \
+  --output-scorer /secure/external_study/scorer.py
+```
+
+See the [MMLU Core v1 protocol](paper_reproduction/MMLU_CORE_V1_PROTOCOL.md) for the pinned revision and SHA-256.
+
+### 3 · Estimate before provider calls
+
+> [!CAUTION]
+> Collection is a paid external operation. Keep the HUD credential in the collection shell only. Never copy `.env`, responses, answer keys, or a token into Git or the evaluator image.
+
+The collector computes a no-call estimate before execution. Finalization rejects a declared study cost above **$50**, synthetic records, incomplete matrices, invalid scores, and provenance mismatches. See the [external collection workflow](paper_reproduction/EXTERNAL_COLLECTION.md).
+
+### 4 · Finalize the package pair
 
 ```bash
 uv run python scripts/finalize_core_v1_package.py \
@@ -59,30 +346,46 @@ uv run python scripts/finalize_core_v1_package.py \
   --collection-metadata /secure/location/collection_metadata.json
 ```
 
-It reads the computed estimate from the collector metadata, requires exactly
-20 fixed items x 4 epochs in every one of
-the nine cells. The preparation script rejects a study over $50 or any
-synthetic/incomplete schema. The reference-freezing script runs the expensive
-Bayesian analyses across 20 inference seeds once; it produces hidden variants,
-tolerances, and report-judge evidence under `verifier/private_optstop/`, which
-is ignored by Git but included in a local Docker build. Both public trace
-packaging and private freezing are atomic: a failed operation leaves no partial
-artifact that would block a safe retry. The image fails closed unless that
-private bundle matches the packaged public traces.
+| Output | Contents | Visibility |
+|---|---|---|
+| Public release data | Validated score traces and manifest | Agent-visible in Phase 2 |
+| Private reference bundle | Results, tolerances, hidden variants, judge evidence | Grader only |
 
-Reference freezing is not evidence of MCMC convergence by itself. Before a
-HUD deployment, inspect the recorded runtime and diagnostic output from the
-real run and reject the bundle if any chain has divergences, inadequate ESS, or
-unavailable/misleading convergence diagnostics. The bounded Core v1
-configuration is a runtime feasibility setting, not a claim that one short
-chain is sufficient for scientific inference.
+Both sides are atomic: failure should not leave a partial package that appears deployable.
 
-Use `paper_reproduction/collection_metadata.example.json` as the metadata
-shape. It records exact prompt hashes/locations, scoring settings, model ID,
-seed, and collection timestamp without copying raw model completions into the
-repository.
+### 5 · Review scientific diagnostics
 
-## Validation
+- Reject chains with divergences.
+- Inspect effective sample size and convergence diagnostics.
+- Verify runtime and seed coverage.
+- Independently inspect aggregate decision logic.
+- Test whether challenge strata behave as intended.
+- Record non-replication rather than “fixing” it away.
+
+---
+
+## Validation ladder
+
+```mermaid
+flowchart BT
+    A["1 · Contract probes"] --> B["2 · Strict package preflight"]
+    B --> C["3 · Production image validation"]
+    C --> D["4 · Single hosted pilot"]
+    D --> E["5 · Repeated evaluation"]
+    E --> F["6 · Benchmark evidence"]
+```
+
+| Level | A pass establishes | It does **not** establish |
+|---|---|---|
+| Contract probes | Interfaces, schemas, packaging, locking | Real collection or scientific validity |
+| Strict preflight | Public/private artifacts are consistent | Hosted execution |
+| Image validation | Packaging and permissions work | Useful agent behavior |
+| Hosted pilot | One trajectory finishes and grades | Reliability or headroom |
+| Repeated evaluation | Failure modes and score distribution | Practitioner relevance |
+| Benchmark evidence | Reward tracks useful unsaturated skill | Broad generalization |
+
+<details>
+<summary><strong>Run all no-cost validation commands</strong></summary>
 
 ```bash
 uv run python scripts/validate_reference.py
@@ -101,32 +404,40 @@ uv run python scripts/probe_optstop_phase_lock.py
 uv run python scripts/check_optstop_reference.py
 ```
 
-The first two commands validate the retained monitoring regression task. The
-third validates its local HUD lifecycle without production UID ownership. The
-next ten are no-cost Core v1 contracts for collection, trace packaging,
-reference-bundle structure, concrete external-study construction, image-package
-integrity, hidden-submission staging, strict output validation, trusted phase release, end-to-end template grading, and preregistration locking. The final command is the strict
-paper-task preflight and succeeds only after the private package has been built
-from real traces.
+</details>
 
-## Deploy and pilot
+> [!WARNING]
+> Fixture probes are engineering evidence. They do not substitute for the real Bayesian workload, production isolation, hosted execution, transcript review, or expert assessment of the reward.
 
-Never load `.env` into the build image. After all validation succeeds:
+---
+
+## Deployment
+
+### Readiness gate
+
+- [ ] `paper_reproduction/release/data/manifest.json` exists from real traces
+- [ ] `verifier/private_optstop/reference_bundle.json` exists
+- [ ] Strict `check_optstop_reference.py` preflight passes
+- [ ] Convergence diagnostics have been reviewed
+- [ ] No credentials or raw responses are in the build context
+- [ ] Production sandbox and numeric UID behavior are validated
+- [ ] A one-pilot budget and stopping condition are approved
+
+### Deploy and pilot Core v1
 
 ```bash
 hud deploy env.py --runtime hud --no-env
 hud sync tasks "AI Safety Paper Reproduction - Core v1" tasks_paper.py --dry-run
 hud sync tasks "AI Safety Paper Reproduction - Core v1" tasks_paper.py --yes
+
 hud eval "AI Safety Paper Reproduction - Core v1" claude-sonnet-4-6 \
   --remote --all --auto-respond --max-steps 120 \
   --max-concurrent 1 --config max_tokens=4096 --yes
 ```
 
-Inspect the trace, the deterministic score, the LLM report-judge result, the
-runtime, and spend before running five independent attempts.
+Inspect the trajectory, every score component, report-judge evidence, hidden-execution notes, runtime, and spend before repeated runs.
 
-The regression environment is deployed separately only when it needs a hosted
-regression check:
+### Deploy regression separately
 
 ```bash
 hud deploy env_monitoring.py --runtime hud --no-env \
@@ -134,16 +445,106 @@ hud deploy env_monitoring.py --runtime hud --no-env \
 hud sync tasks "AI Safety Monitoring Regression" tasks_monitoring.py --yes
 ```
 
+---
+
 ## Security model
 
-The agent workspace has no network or provider credentials. The production
-image uses a numeric unprivileged UID, `setpriv`, and a seccomp launcher;
-this is a defense-in-depth fallback, not equivalent to bubblewrap isolation.
-Verifier source, hidden references, and hidden inputs are root-only. The
-grader runs a copied, link-free submission workspace with a separate resource
-limit and checks generic behavior on one hidden matrix.
+```mermaid
+flowchart TB
+    HOST["HUD evaluator host"] --> SERVER["Trusted environment process"]
+    HOST --> ROOT["Root-only verifier assets"]
+    SERVER --> WS["Agent workspace<br/>UID 65532 · no network"]
+    ROOT --> GRADE["Copied read-only<br/>grading workspace"]
+    WS -->|regular files only| GRADE
+    GRADE --> EXEC["Restricted process<br/>timeout + group kill"]
+    style ROOT fill:#7f1d1d,color:#fff
+    style WS fill:#1e3a8a,color:#fff
+    style GRADE fill:#14532d,color:#fff
+```
 
-Core v1 is a one-prompt/one-grade HUD task. Within that single agent session,
-a trusted server-side watcher releases phase two after valid `forecast.json`
-and `experiment_plan.json` files appear. The agent must wait for
-`PHASE_TWO_READY`; ending the task before it appears receives zero reward.
+| Layer | Control |
+|---|---|
+| Network | Agent workspace declares `network=False` |
+| Identity | Numeric unprivileged UID/GID |
+| Credentials | Collection-only; excluded from Git and image |
+| Hidden data | Root-only verifier directory |
+| File transfer | Regular-file-only, no-follow grading copy |
+| Execution | Minimal environment, restricted launcher, timeout |
+| Cleanup | Dedicated session and process-group termination |
+| Phase integrity | Strict schemas, in-memory hashes, atomic release |
+| Reward integrity | Hidden matrices, deterministic selection, caps |
+
+The seccomp launcher and numeric UID are defense in depth, not a claim of equivalence to validated bubblewrap or VM isolation.
+
+---
+
+## Known limitations
+
+<details open>
+<summary><strong>Scientific limitations</strong></summary>
+
+- MMLU is public and may be present in model training data.
+- This tests a stopping procedure on a controlled score matrix, not contamination-free frontier capability.
+- Core v1 uses a paired item-level Student-t approximation rather than every hierarchical appendix analysis.
+- One paper cannot demonstrate broad automated-research ability.
+- A frozen reference is only as trustworthy as its implementation and reviewed diagnostics.
+
+</details>
+
+<details>
+<summary><strong>Benchmark limitations</strong></summary>
+
+- Strong-model transcripts and repeated-run failure analysis are still needed.
+- Human and expert baselines are needed to establish realism.
+- Reward correlation with expert judgment is not yet demonstrated.
+- One hidden matrix per instance tests generalization narrowly.
+- More papers, non-replications, and known-flaw studies are required for scale.
+
+</details>
+
+<details>
+<summary><strong>Claim boundary</strong></summary>
+
+| Level | Establishes | Core v1 |
+|---|---|---|
+| Synthetic pilot | Executes a method on constructed data | Regression support only |
+| Independent redacted-paper reproduction | Runs documented analyses on new clean inputs | **Intended level** |
+| Faithful historical replay | Uses original traces or exact models/prompts/scorers | Not claimed |
+
+</details>
+
+---
+
+## Scaling path
+
+```mermaid
+flowchart LR
+    V1["Core v1<br/>one study"] --> P["Multiple papers"]
+    P --> F["Failure library<br/>bugs + overclaims"]
+    F --> N["Private novel studies"]
+    N --> E["Expert-calibrated suite"]
+    E --> RL["RL-ready distribution<br/>measured headroom"]
+```
+
+A credible suite should mix solid reproductions, genuine non-replications, known implementation defects, overstated conclusions, private studies with lower leakage, and tasks where honest uncertainty is more valuable than experimental success.
+
+The target skill is not “always confirm the paper.” It is **produce trustworthy research under uncertainty**.
+
+---
+
+## Design documents
+
+- [Benchmark contract](analysis/PAPER_REPRODUCTION_CONTRACT.md)
+- [MMLU Core v1 protocol](paper_reproduction/MMLU_CORE_V1_PROTOCOL.md)
+- [External collection workflow](paper_reproduction/EXTERNAL_COLLECTION.md)
+- [Phase-one agent task](paper_reproduction/phase1/task.md)
+- [HUD pilot plan](analysis/HUD_PILOT_PLAN.md)
+- [Validation notes](analysis/VALIDATION.md)
+- [Security policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+
+---
+
+## Responsible use
+
+This repository is for controlled AI-safety evaluation and research. Never place production credentials, raw responses, answer keys, private references, or non-public paper materials in Git history. Treat agent-generated conclusions as experimental results requiring independent verification—not authoritative research findings.
