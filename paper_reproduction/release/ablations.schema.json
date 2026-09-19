@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ablations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "ablations": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "changed_parameter", "effect_size", "uncertainty", "outcome", "interpretation"],
+        "properties": {
+          "id": {"enum": ["fixed_budget_baseline", "item_order_sensitivity", "stopping_conservatism_sensitivity"]},
+          "changed_parameter": {"type": "string", "minLength": 1},
+          "effect_size": {"type": "number", "minimum": 0},
+          "uncertainty": {"type": "number", "minimum": 0},
+          "outcome": {"enum": ["stable", "sensitive"]},
+          "interpretation": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

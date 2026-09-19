@@ -7,4 +7,9 @@ __pycache__/
 .reference_workspace/
 .grader_probe/
 workspace/
+optstop_workspace/
+trace.json
+verifier/private_optstop/
+paper_reproduction/release/data/
+external_study/
 *.zip

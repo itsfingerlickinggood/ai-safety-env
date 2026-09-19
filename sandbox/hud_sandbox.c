@@ -86,9 +86,12 @@ static void install_filter(void) {
     seccomp_release(ctx);
 }
 
-static void set_limits(void) {
-    struct rlimit cpu = {300, 300};
-    struct rlimit address_space = {2147483648ULL, 2147483648ULL};
+static void set_limits(int agent_shell) {
+    /* The research shell needs room for bounded PyMC analyses. The hidden
+       submission runner is still capped independently. HUD's task timeout is
+       the outer wall-clock guard. */
+    struct rlimit cpu = {agent_shell ? 7200 : 900, agent_shell ? 7200 : 900};
+    struct rlimit address_space = {4294967296ULL, 4294967296ULL};
     struct rlimit files = {128, 128};
     struct rlimit processes = {256, 256};
     struct rlimit file_size = {33554432, 33554432};
@@ -100,7 +103,7 @@ static void set_limits(void) {
 }
 
 static int shell_mode(char *argv[]) {
-    set_limits();
+    set_limits(1);
     install_filter();
     argv[0] = (char *)"bash";
     execv("/bin/bash", argv);
@@ -127,7 +130,7 @@ static int grader_mode(int argc, char *argv[]) {
         fputs("sandbox: invalid gid\n", stderr);
         return 125;
     }
-    set_limits();
+    set_limits(0);
     if (setgroups(0, NULL) != 0 || setgid(gid) != 0 || setuid(uid) != 0) {
         perror("sandbox: privilege drop");
         return 126;

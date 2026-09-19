@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "title": "Knowing When to Stop: Bayesian Optimal Stopping for LLM Evaluations",
+  "source": "arXiv:2608.14425 / pinned UKGovernmentBEIS optstop paper PDF",
+  "source_pdf_sha256": "ef769d0ee6d9361acd09cea568b16faf89d1f038460ef4cfc8e57b028d9db378",
+  "source_pages": 32,
+  "redaction_policy": "Remove all result-bearing claims, tables, figures, captions, conclusions, and empirical appendix material.",
+  "redactions": [
+    {
+      "page": 1,
+      "reason": "abstract outcome claims"
+    },
+    {
+      "page": 5,
+      "reason": "main empirical results"
+    },
+    {
+      "page": 6,
+      "reason": "main empirical results and conclusions"
+    },
+    {
+      "page": 7,
+      "reason": "main empirical results and conclusions"
+    },
+    {
+      "page": 8,
+      "reason": "main empirical results and conclusions"
+    },
+    {
+      "page": 20,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 21,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 22,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 23,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 24,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 25,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 26,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 27,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 28,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 29,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 30,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 31,
+      "reason": "empirical appendix"
+    },
+    {
+      "page": 32,
+      "reason": "empirical appendix"
+    }
+  ]
+}

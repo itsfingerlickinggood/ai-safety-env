@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "submission.py must emit exactly the same object as reproduction_results.json; use reproduction_results.schema.json.",
+  "$ref": "reproduction_results.schema.json"
+}

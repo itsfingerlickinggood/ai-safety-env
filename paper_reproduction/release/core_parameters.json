@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "description": "Canonical bounded Core v1 analysis configuration. These are methodological parameters, not answer-bearing outputs.",
+  "delta_item": 0.05,
+  "delta_cap": 0.05,
+  "CI_delta": 0.001,
+  "cred_level": 0.97,
+  "conservatism": 5,
+  "draws": 250,
+  "tune": 250,
+  "chains": 1,
+  "cores": 1,
+  "random_seed": 1000,
+  "reanalysis_interval": 2,
+  "ordinal_tasks": ["ordinal"],
+  "continuous_tasks": ["continuous"],
+  "ordinal_max_score": 10
+}

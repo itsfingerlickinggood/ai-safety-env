@@ -1,13 +1,21 @@
 [project]
-name = "hud-long-horizon-safety-research"
-version = "0.2.0"
-description = "HUD v6 long-horizon environment for forecasting, reproducing, and extending sabotage-monitoring research"
-requires-python = ">=3.11,<3.13"
+name = "hud-optstop-core-reproduction"
+version = "0.3.0"
+description = "HUD environments for AI-safety monitoring regression and bounded paper reproduction"
+requires-python = "==3.12.*"
 dependencies = [
   "hud==0.6.15",
-  "numpy>=2.0,<3",
-  "pandas>=2.2,<3",
+  "arviz==0.23.4",
+  "matplotlib==3.9.4",
+  "numba==0.60.0",
+  "numpy==1.26.4",
+  "pandas==2.3.3",
+  "pydantic==2.13.4",
+  "pymc==5.25.1",
+  "pypdf==6.17.0",
+  "scipy==1.14.1",
+  "tqdm==4.68.2",
 ]
 
 [tool.hud]
-image = "long-horizon-safety-research"
+image = "optstop-core-reproduction-v1"

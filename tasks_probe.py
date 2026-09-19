@@ -2,7 +2,7 @@ from hud import Task
 
 
 task = Task(
-    env="long-horizon-safety-research",
+    env="ai-safety-monitoring-regression",
     id="research-sabotage-monitoring",
     args={},
     slug="long-horizon-sabotage-research-001",

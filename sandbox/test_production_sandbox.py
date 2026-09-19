@@ -24,10 +24,20 @@ try:
 except PermissionError:
     result["network_blocked"] = True
 try:
-    Path("/app/verifier/score.py").read_text()
+    for verifier in ("score.py", "optstop_score.py"):
+        Path("/app/verifier", verifier).read_text()
     result["verifier_hidden"] = False
 except PermissionError:
     result["verifier_hidden"] = True
+try:
+    for release_path in (
+        Path("/app/paper_reproduction/release/analysis_manifest.json"),
+        Path("/app/paper_reproduction/vendor/optstop/__init__.py"),
+    ):
+        release_path.read_text()
+    result["phase_two_hidden"] = False
+except PermissionError:
+    result["phase_two_hidden"] = True
 Path("write-ok.txt").write_text("ok\n")
 result["workspace_writable"] = Path("write-ok.txt").read_text() == "ok\n"
 result["hud_key_hidden"] = "HUD_API_KEY" not in os.environ
@@ -61,6 +71,7 @@ def main() -> None:
             "gid": GID,
             "network_blocked": True,
             "verifier_hidden": True,
+            "phase_two_hidden": True,
             "workspace_writable": True,
             "hud_key_hidden": True,
         }

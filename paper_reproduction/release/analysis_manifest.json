@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "task_name": "optstop Core Reproduction v1",
+  "claim_boundary": "bounded independent reproduction of the central 3x3 study",
+  "required_analyses": [
+    {"id": "low_binary", "kind": "main_cell", "score_type": "binary", "regime": "low"},
+    {"id": "mid_binary", "kind": "main_cell", "score_type": "binary", "regime": "mid"},
+    {"id": "high_binary", "kind": "main_cell", "score_type": "binary", "regime": "high"},
+    {"id": "low_ordinal", "kind": "main_cell", "score_type": "ordinal", "regime": "low"},
+    {"id": "mid_ordinal", "kind": "main_cell", "score_type": "ordinal", "regime": "mid"},
+    {"id": "high_ordinal", "kind": "main_cell", "score_type": "ordinal", "regime": "high"},
+    {"id": "low_continuous", "kind": "main_cell", "score_type": "continuous", "regime": "low"},
+    {"id": "mid_continuous", "kind": "main_cell", "score_type": "continuous", "regime": "mid"},
+    {"id": "high_continuous", "kind": "main_cell", "score_type": "continuous", "regime": "high"},
+    {"id": "fixed_budget_baseline", "kind": "ablation", "change": "retain all planned epochs"},
+    {"id": "item_order_sensitivity", "kind": "ablation", "change": "epoch-interleaved versus shuffled item order"},
+    {"id": "stopping_conservatism_sensitivity", "kind": "ablation", "change": "registered precision/conservatism settings"}
+  ],
+  "primary_outcomes": [
+    "per-cell efficiency",
+    "full versus retained score difference",
+    "practical-equivalence decision",
+    "mean efficiency",
+    "mean absolute difference"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "study_id", "model_id", "source", "items"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "model_id": {"const": "claude-sonnet-4-6"},
+    "items": {
+      "type": "array", "minItems": 180, "maxItems": 180,
+      "items": {
+        "type": "object",
+        "required": ["cell_id", "regime", "score_type", "item_id", "prompt"],
+        "properties": {
+          "cell_id": {"enum": ["low_binary", "mid_binary", "high_binary", "low_ordinal", "mid_ordinal", "high_ordinal", "low_continuous", "mid_continuous", "high_continuous"]},
+          "regime": {"enum": ["low", "mid", "high"]},
+          "score_type": {"enum": ["binary", "ordinal", "continuous"]},
+          "item_id": {"type": "string", "minLength": 1},
+          "prompt": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

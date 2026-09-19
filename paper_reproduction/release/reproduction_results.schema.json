@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "cells", "mean_efficiency", "mean_absolute_difference", "overall_equivalence_decision"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "cells": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["low_binary", "mid_binary", "high_binary", "low_ordinal", "mid_ordinal", "high_ordinal", "low_continuous", "mid_continuous", "high_continuous"],
+      "properties": {
+        "low_binary": {"$ref": "#/$defs/cell"}, "mid_binary": {"$ref": "#/$defs/cell"}, "high_binary": {"$ref": "#/$defs/cell"},
+        "low_ordinal": {"$ref": "#/$defs/cell"}, "mid_ordinal": {"$ref": "#/$defs/cell"}, "high_ordinal": {"$ref": "#/$defs/cell"},
+        "low_continuous": {"$ref": "#/$defs/cell"}, "mid_continuous": {"$ref": "#/$defs/cell"}, "high_continuous": {"$ref": "#/$defs/cell"}
+      }
+    },
+    "mean_efficiency": {"type": "number", "minimum": 0, "maximum": 1},
+    "mean_absolute_difference": {"type": "number", "minimum": 0, "maximum": 1},
+    "overall_equivalence_decision": {"enum": ["accept_null", "undecided", "reject"]}
+  },
+  "$defs": {
+    "cell": {
+      "type": "object", "additionalProperties": false,
+      "required": ["efficiency", "full_mean", "retained_mean", "absolute_difference", "paired_n", "paired_mean_difference", "paired_hdi_94", "rope", "equivalence_decision", "error"],
+      "properties": {
+        "efficiency": {"type": "number", "minimum": 0, "maximum": 1},
+        "full_mean": {"type": "number", "minimum": 0, "maximum": 1},
+        "retained_mean": {"type": "number", "minimum": 0, "maximum": 1},
+        "absolute_difference": {"type": "number", "minimum": 0, "maximum": 1},
+        "paired_n": {"type": "integer", "minimum": 0},
+        "paired_mean_difference": {"type": "number", "minimum": -1, "maximum": 1},
+        "paired_hdi_94": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "minimum": -1, "maximum": 1}},
+        "rope": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "equivalence_decision": {"enum": ["accept_null", "undecided", "reject"]},
+        "error": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

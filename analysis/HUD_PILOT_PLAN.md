@@ -1,5 +1,10 @@
 # HUD pilot plan
 
+This plan applies to the retained monitoring regression task. The official
+paper task is **AI Safety Paper Reproduction - Core v1** and follows the
+one-pilot-then-five-pilots rollout in the repository README. Do not evaluate
+both tasksets together with `--all`.
+
 ## Success criteria before pitching
 
 - Reference solution reward >= 0.95.

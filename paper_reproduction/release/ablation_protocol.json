@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "ablations": [
+    {
+      "id": "fixed_budget_baseline",
+      "changed_parameter": "disable stopping and retain all four epochs",
+      "outcome_definition": "difference in mean efficiency relative to the stopped analysis"
+    },
+    {
+      "id": "item_order_sensitivity",
+      "changed_parameter": "disable item shuffling",
+      "outcome_definition": "absolute difference in mean efficiency relative to the shuffled analysis"
+    },
+    {
+      "id": "stopping_conservatism_sensitivity",
+      "changed_parameter": "increase conservatism from 5 to 8",
+      "outcome_definition": "absolute difference in mean efficiency relative to conservatism 5"
+    }
+  ]
+}

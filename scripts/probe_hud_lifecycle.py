@@ -19,12 +19,12 @@ os.environ.setdefault("HUD_FORCE_UNSANDBOXED_GRADER", "1")
 
 async def main() -> None:
     task = Task(
-        env="long-horizon-safety-research",
+        env="ai-safety-monitoring-regression",
         id="research-sabotage-monitoring",
         args={},
         slug="long-horizon-sabotage-research-001",
     )
-    async with LocalRuntime(ROOT / "env.py")(task) as runtime:
+    async with LocalRuntime(ROOT / "env_monitoring.py")(task) as runtime:
         async with connect(runtime) as client:
             bindings = [
                 {

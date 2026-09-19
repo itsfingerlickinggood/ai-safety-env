@@ -1,0 +1,39 @@
+{
+  "estimated_cost_usd": 50.0,
+  "collector": {
+    "name": "collect_current_model_study.py",
+    "schema_version": 1,
+    "calls": 720,
+    "input_price_per_million": "REPLACE_WITH_CURRENT_PRICE",
+    "output_price_per_million": "REPLACE_WITH_CURRENT_PRICE",
+    "estimation_method": "UTF-8 bytes / 4 for prompt tokens plus configured maximum completion tokens"
+  },
+  "provider": "Anthropic Messages API",
+  "generation_parameters": {
+    "model_id": "claude-sonnet-4-6",
+    "temperature": 0.2,
+    "max_tokens": 64,
+    "epochs_per_item": 4
+  },
+  "input_provenance": {
+    "dataset": "cais/mmlu",
+    "revision": "c30699e8356da336a370243923dbaf21066bb9fe",
+    "source_file_sha256": "74a41822ce7d3def56e1682f958469c04642a5336a5ce912fa375fdb90fb25d7",
+    "license": "MIT"
+  },
+  "prompt_manifest": {
+    "prompt_template_sha256": "REPLACE_WITH_SHA256",
+    "prompt_storage": "secure external location; no model completions in HUD package"
+  },
+  "scorer_configuration": {
+    "scorer_version": "PINNED-BEFORE-COLLECTION",
+    "score_types": ["binary", "ordinal", "continuous"],
+    "ordinal_max_score": 10
+  },
+  "collection_timestamp": "2026-09-04T00:00:00Z",
+  "collection_seed": {
+    "study_selection_seed": 20260905,
+    "provider_sampling_seed": null,
+    "note": "Record provider stochasticity in the frozen traces; do not claim a fixed provider seed."
+  }
+}

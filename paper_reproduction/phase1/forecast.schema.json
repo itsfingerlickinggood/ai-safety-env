@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "binary", "continuous"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "binary": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {"type": "object", "additionalProperties": false, "required": ["id", "probability"], "properties": {"id": {"enum": ["mean_efficiency_above_50pct", "any_condition_above_90pct", "all_conditions_equivalent", "nonreplication_possible"]}, "probability": {"type": "number", "minimum": 0, "maximum": 1}}}
+    },
+    "continuous": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {"type": "object", "additionalProperties": false, "required": ["id", "mean", "std"], "properties": {"id": {"enum": ["mean_efficiency", "mean_absolute_difference"]}, "mean": {"type": "number"}, "std": {"type": "number", "exclusiveMinimum": 0}}}
+    }
+  }
+}

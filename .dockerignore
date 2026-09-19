@@ -5,11 +5,15 @@
 .hud_test_bin
 __pycache__
 *.pyc
+.pytest_cache
 .reference_workspace
 .grader_probe
 workspace
+optstop_workspace
 analysis
 reference
 scripts
 tasks_probe.py
+trace.json
+external_study
 *.zip
